@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-savevideohq"
+description = "Professional video save node for ComfyUI - ProRes ladder, All-Intra H.264/H.265, FFV1 lossless. Honest 10-bit pipeline that preserves diffusion float precision."
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = ["av>=14.0"]
+
+[project.urls]
+Repository = "https://github.com/xergon/ComfyUI-SaveVideoHQ"
+
+[tool.comfy]
+PublisherId = "xergon"
+DisplayName = "Save Video HQ"
+Icon = ""
