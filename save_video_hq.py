@@ -45,6 +45,20 @@ PRESETS = {
 
     "FFV1_lossless_4:4:4_10bit":  {"codec": "ffv1", "container": "mkv", "pix_fmt": "yuv444p10le", "opts": {"level": "3", "g": "1", "coder": "1", "context": "1"}},
 
+    # ----------------------------------------------------------------------
+    # NVENC (hardware) presets - GPU encoder. ~5-10x faster than software.
+    # Quality vs CRF: NVENC CQ ~= CRF + 4-6 at equivalent quality. Lower CQ here
+    # to compensate. NVENC h264 is 8-bit only; HEVC + AV1 support 10-bit.
+    # ----------------------------------------------------------------------
+    "H264_NVENC_AllI_4:2:0_8bit_CQ16":  {"codec": "h264_nvenc", "container": "mp4", "pix_fmt": "yuv420p", "opts": {"preset": "p7", "tune": "hq", "rc": "constqp", "qp": "16", "g": "1", "bf": "0", "profile": "high"}},
+    "H264_NVENC_AllI_4:4:4_8bit_CQ14":  {"codec": "h264_nvenc", "container": "mp4", "pix_fmt": "yuv444p", "opts": {"preset": "p7", "tune": "hq", "rc": "constqp", "qp": "14", "g": "1", "bf": "0", "profile": "high_444p"}},
+
+    "H265_NVENC_AllI_4:2:0_10bit_CQ18":  {"codec": "hevc_nvenc", "container": "mp4", "pix_fmt": "yuv420p10le", "opts": {"preset": "p7", "tune": "hq", "rc": "constqp", "qp": "18", "g": "1", "bf": "0", "profile": "main10"}},
+    "H265_NVENC_AllI_4:2:2_10bit_CQ16":  {"codec": "hevc_nvenc", "container": "mkv", "pix_fmt": "yuv422p10le", "opts": {"preset": "p7", "tune": "hq", "rc": "constqp", "qp": "16", "g": "1", "bf": "0", "profile": "rext"}},
+    "H265_NVENC_AllI_4:4:4_10bit_CQ16":  {"codec": "hevc_nvenc", "container": "mkv", "pix_fmt": "yuv444p10le", "opts": {"preset": "p7", "tune": "hq", "rc": "constqp", "qp": "16", "g": "1", "bf": "0", "profile": "rext"}},
+
+    "AV1_NVENC_AllI_4:2:0_10bit_CQ22":  {"codec": "av1_nvenc", "container": "mp4", "pix_fmt": "yuv420p10le", "opts": {"preset": "p7", "tune": "hq", "rc": "constqp", "qp": "22", "g": "1", "bf": "0"}},
+
     "Custom":  None,
 }
 
