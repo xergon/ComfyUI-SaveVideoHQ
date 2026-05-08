@@ -155,7 +155,30 @@ class SaveVideoHQ:
 
         size_mb = os.path.getsize(out_path) / 1e6
         log.info(f"SaveVideoHQ wrote {out_path} ({size_mb:.1f} MB) preset={preset}")
-        return {"ui": {"images": [{"filename": out_filename, "subfolder": subfolder, "type": "output"}]}}
+
+        # Use the "gifs" key shape (VHS_VideoCombine convention) so the ComfyUI
+        # frontend mounts an inline <video> player + download link instead of
+        # treating the file as a still image.
+        format_map = {"mp4": f"video/h264-mp4", "mkv": f"video/h264-mkv", "mov": f"video/h264-mov"}
+        # Override for non-h264 codecs so the preview hint matches reality.
+        if codec == "libx265":
+            format_map = {"mp4": "video/h265-mp4", "mkv": "video/h265-mkv", "mov": "video/h265-mov"}
+        elif codec == "prores_ks":
+            format_map = {"mov": "video/prores", "mp4": "video/prores", "mkv": "video/prores"}
+        elif codec == "ffv1":
+            format_map = {"mkv": "video/ffv1", "mp4": "video/ffv1", "mov": "video/ffv1"}
+
+        return {
+            "ui": {
+                "gifs": [{
+                    "filename": out_filename,
+                    "subfolder": subfolder,
+                    "type": "output",
+                    "format": format_map.get(container, f"video/{container}"),
+                    "frame_rate": float(fps),
+                }]
+            }
+        }
 
     def _build_custom_config(self, codec, container, rate_control, crf, bitrate_mbps,
                              preset_speed, all_intra, pix_fmt):
