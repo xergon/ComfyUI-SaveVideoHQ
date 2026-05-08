@@ -219,21 +219,45 @@ def _encode_audio(outc, audio, container):
     sr = int(audio["sample_rate"])
     if wf is None or wf.numel() == 0:
         return
+
     a_codec = "aac"
     if container == "mkv":
         a_codec = "flac"
     elif container == "mov":
         a_codec = "pcm_s16le"
+
     a_stream = outc.add_stream(a_codec, rate=sr)
-    a_stream.layout = "stereo" if wf.shape[1] >= 2 else "mono"
+    layout = "stereo" if wf.shape[1] >= 2 else "mono"
+    a_stream.layout = layout
+    # Explicit time_base prevents PyAV's "Cannot rebase to zero time" error
+    # when muxing a single-shot AudioFrame.
+    a_stream.time_base = Fraction(1, sr)
+
     samples = wf[0].cpu().numpy()
     if samples.dtype != "float32":
         samples = samples.astype("float32")
-    a_frame = av.AudioFrame.from_ndarray(samples, format="fltp", layout=a_stream.layout)
+    # PyAV expects shape [channels, samples] for planar floats
+    if samples.ndim == 1:
+        samples = samples[None, :]
+
+    a_frame = av.AudioFrame.from_ndarray(samples, format="fltp", layout=layout)
     a_frame.sample_rate = sr
-    for packet in a_stream.encode(a_frame):
-        outc.mux(packet)
-    for packet in a_stream.encode():
+    a_frame.pts = 0
+    a_frame.time_base = a_stream.time_base
+
+    # Many codecs (aac) need fixed-size frames; let av's encoder buffer chunk it.
+    # If a one-shot frame fails, fall back to chunked encoding via a resampler.
+    try:
+        for packet in a_stream.encode(a_frame):
+            outc.mux(packet)
+    except Exception:
+        from av.audio.resampler import AudioResampler
+        resampler = AudioResampler(format="fltp", layout=layout, rate=sr)
+        for resampled in resampler.resample(a_frame):
+            for packet in a_stream.encode(resampled):
+                outc.mux(packet)
+
+    for packet in a_stream.encode(None):  # flush
         outc.mux(packet)
 
 
